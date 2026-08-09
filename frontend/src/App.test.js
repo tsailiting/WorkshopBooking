@@ -22,11 +22,11 @@ describe('App user reservations UI', () => {
   it('does not show user UUID tools on /admin', async () => {
     window.history.replaceState({}, '', '/admin')
     vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
-      if (url.endsWith('/sessions') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([]))
       }
 
-      if (url.endsWith('/reservations') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([]))
       }
 
@@ -43,7 +43,7 @@ describe('App user reservations UI', () => {
 
   it('shows cancel in 我的預約 and hides reserve for already reserved sessions', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
-      if (url.endsWith('/sessions') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([
           {
             id: 1,
@@ -70,7 +70,7 @@ describe('App user reservations UI', () => {
         ]))
       }
 
-      if (url.endsWith('/reservations') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([
           {
             id: 10,
@@ -93,9 +93,50 @@ describe('App user reservations UI', () => {
     expect(wrapper.text()).toContain('你已預約成功')
   })
 
+  it('renders session time in browser local time format', async () => {
+    const localFormatter = new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+    const localTime = localFormatter.format(new Date('2030-08-12T10:00:00Z'))
+
+    vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
+        return Promise.resolve(mockResponse([
+          {
+            id: 1,
+            title: '本地時間課程',
+            start_time: '2030-08-12T10:00:00Z',
+            duration_minutes: 60,
+            capacity: 10,
+            price: 1000,
+            confirmed_count: 0,
+            waitlist_count: 0,
+            created_by: 'admin',
+          },
+        ]))
+      }
+
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
+        return Promise.resolve(mockResponse([]))
+      }
+
+      return Promise.resolve(mockResponse({}))
+    }))
+
+    const wrapper = mount(App)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain(`開始時間: ${localTime}`)
+  })
+
   it('hides cancel button for confirmed reservations within 24 hours', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
-      if (url.endsWith('/sessions') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([
           {
             id: 1,
@@ -111,7 +152,7 @@ describe('App user reservations UI', () => {
         ]))
       }
 
-      if (url.endsWith('/reservations') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([
           {
             id: 11,
@@ -138,7 +179,7 @@ describe('App user reservations UI', () => {
 
   it('shows cancel button for waitlisted reservations', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
-      if (url.endsWith('/sessions') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([
           {
             id: 3,
@@ -154,7 +195,7 @@ describe('App user reservations UI', () => {
         ]))
       }
 
-      if (url.endsWith('/reservations') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([
           {
             id: 12,
@@ -176,19 +217,57 @@ describe('App user reservations UI', () => {
     expect(wrapper.text()).toContain('你已在候補名單中')
   })
 
+  it('hides cancel button for cancelled reservations', async () => {
+    vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
+        return Promise.resolve(mockResponse([
+          {
+            id: 4,
+            title: '已取消課程預約',
+            start_time: '2030-08-15T10:00:00Z',
+            duration_minutes: 60,
+            capacity: 10,
+            price: 1200,
+            confirmed_count: 0,
+            waitlist_count: 0,
+            created_by: 'admin',
+          },
+        ]))
+      }
+
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
+        return Promise.resolve(mockResponse([
+          {
+            id: 13,
+            session_id: 4,
+            status: 'cancelled',
+            user_id: '123e4567-e89b-12d3-a456-426614174000',
+          },
+        ]))
+      }
+
+      return Promise.resolve(mockResponse({}))
+    }))
+
+    const wrapper = mount(App)
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="cancel-13"]').exists()).toBe(false)
+  })
+
   it('creates a new user from the online generator endpoint and switches uuid', async () => {
     vi.stubGlobal('fetch', vi.fn((url, options = {}) => {
-      if (url.endsWith('/users/generate') && options.method === 'POST') {
+      if (url.endsWith('/api/users/generate') && options.method === 'POST') {
         return Promise.resolve(mockResponse({
           user_id: '99999999-9999-4999-8999-999999999999',
         }))
       }
 
-      if (url.endsWith('/sessions') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/sessions') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([]))
       }
 
-      if (url.endsWith('/reservations') && (!options.method || options.method === 'GET')) {
+      if (url.endsWith('/api/reservations') && (!options.method || options.method === 'GET')) {
         return Promise.resolve(mockResponse([]))
       }
 

@@ -1,6 +1,6 @@
-from flask import Flask, jsonify, request
+from flask import Flask, abort, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, select, text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.pool import StaticPool
 from datetime import datetime, timedelta, timezone
@@ -236,7 +236,11 @@ def reserve(session_id):
     if not user_id:
         return jsonify({'error': 'user_id is required'}), 400
 
-    session = WorkshopSession.query.get_or_404(session_id)
+    session = db.session.execute(
+        select(WorkshopSession).where(WorkshopSession.id == session_id).with_for_update()
+    ).scalar_one_or_none()
+    if session is None:
+        abort(404)
     start_time = normalize_datetime(session.start_time)
     if start_time <= datetime.now(timezone.utc):
         return jsonify({'error': 'This session has already ended'}), 400
@@ -271,7 +275,9 @@ def reserve(session_id):
 
 @app.delete('/reservations/<int:reservation_id>')
 def cancel_reservation(reservation_id):
-    reservation = Reservation.query.get_or_404(reservation_id)
+    reservation = db.session.get(Reservation, reservation_id)
+    if reservation is None:
+        abort(404)
     session = reservation.session
     start_time = normalize_datetime(session.start_time)
 
@@ -318,7 +324,7 @@ def normalize_datetime(value):
 
 
 def promote_waitlist(session_id):
-    session = WorkshopSession.query.get(session_id)
+    session = db.session.get(WorkshopSession, session_id)
     if not session:
         return
 

@@ -17,8 +17,12 @@ export function canCancelReservation(reservation, session, now = new Date()) {
     return false
   }
 
-  if (reservation.status !== 'confirmed') {
+  if (reservation.status === 'waitlist') {
     return true
+  }
+
+  if (reservation.status !== 'confirmed') {
+    return false
   }
 
   return startTime.getTime() - now.getTime() > CANCELLATION_WINDOW_MS

@@ -36,7 +36,7 @@
       <h2>課程列表</h2>
       <div v-for="session in sessions" :key="session.id" class="card">
         <h3>{{ session.title }}</h3>
-        <p>開始時間: {{ session.start_time }}</p>
+        <p>開始時間: {{ formatLocalDateTime(session.start_time) }}</p>
         <p>時長: {{ session.duration_minutes }} 分鐘</p>
         <p>人數上限: {{ session.capacity }}</p>
         <p>價格: {{ session.price }}</p>
@@ -84,7 +84,7 @@ const currentUserId = ref(loadCurrentUserId(knownUserIds.value))
 const route = ref(getRoute())
 const sessionsById = computed(() => Object.fromEntries(sessions.value.map((session) => [session.id, session])))
 
-const api = 'http://127.0.0.1:5000'
+const api = import.meta.env.VITE_API_BASE_URL || '/api'
 
 function fallbackUuid() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -241,6 +241,22 @@ function reservationStatusText(sessionId) {
 function reservationSessionTitle(reservation) {
   const session = sessionsById.value[reservation.session_id]
   return session ? session.title : `課程 #${reservation.session_id}`
+}
+
+function formatLocalDateTime(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
 }
 
 function canShowCancelButton(reservation) {
