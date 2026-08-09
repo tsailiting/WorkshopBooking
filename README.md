@@ -46,10 +46,21 @@ npm install
 npm run dev
 ```
 
-### 5. 驗證
+## 測試
+
+### 自動化測試
+後端測試使用 `pytest`，前端測試使用 `Vitest`。
+
+後端測試：
 ```bash
 cd backend
 PYTHONPATH=. poetry run pytest -q tests/test_business_rules.py
+```
+
+前端測試：
+```bash
+cd frontend
+npm run test
 ```
 
 後端測試目前涵蓋：
@@ -64,14 +75,17 @@ PYTHONPATH=. poetry run pytest -q tests/test_business_rules.py
 - 已預約成功的課程不顯示加入課程 / 候補
 - 已取消的預約不顯示取消按鈕
 
-### 6. 進入 Poetry 虛擬環境（可選）
+### 手動 E2E 測試案例
+1. 開啟 `http://localhost:5173/admin`，建立一個新的課程，確認課程會出現在列表中，且建立者顯示為 `admin`。
+2. 切換到 `http://localhost:5173/user`，建立一個新的 UUID，確認頁面會切換到新使用者，且 UUID 會保留在下拉選單中。
+3. 使用同一個 UUID 預約一門課，確認成功後不再顯示「加入課程 / 候補」按鈕。
+4. 對已滿額的課程以不同 UUID 進行預約，確認後者會進入候補名單。
+5. 對一筆已確認的預約，在課程開始前超過 24 小時時執行取消，確認按鈕會顯示且取消後狀態更新。
+6. 取消一筆已確認的預約後，確認候補名單中的第一位會自動遞補成已確認。
+7. 開啟瀏覽器後檢查所有時間顯示都符合瀏覽器本地時區，而不是固定 UTC。
+
+### Poetry 虛擬環境（可選）
 ```bash
 cd backend
 poetry shell
-```
-
-### 7. 前端測試
-```bash
-cd frontend
-npm run test
 ```
