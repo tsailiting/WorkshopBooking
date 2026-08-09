@@ -3,19 +3,22 @@
 {
 	"name": "SeniorPD Workshop",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+	"image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"version": "latest",
 			"moby": true
 		},
-		"ghcr.io/devcontainers/features/python:1": {},
-		"ghcr.io/devcontainers-extra/features/vue-cli:2": {}
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "24"
+		},
+		"ghcr.io/devcontainers-contrib/features/poetry:2": {}
 	},
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y python3-dev libpq-dev build-essential && poetry config keyring.enabled false",
+	"forwardPorts": [5000, 5173, 5432],
 	"containerEnv": {
 		"POETRY_VIRTUALENVS_IN_PROJECT": "true",
-		"POETRY_VIRTUALENVS_CREATE": "true"
-	},
-	"postCreateCommand": "python3 -m pip install --user --upgrade poetry && echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> /home/vscode/.bashrc",
-	"forwardPorts": [5000, 5173, 5432]
+		"POETRY_VIRTUALENVS_CREATE": "true",
+		"POETRY_KEYRING_ENABLED": "false"
+	}
 }

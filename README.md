@@ -44,7 +44,7 @@ npm run dev
 ### 5. 驗證
 ```bash
 cd backend
-poetry run pytest -q tests/test_business_rules.py
+PYTHONPATH=. poetry run pytest -q tests/test_business_rules.py
 ```
 
 ### 6. 進入 Poetry 虛擬環境（可選）

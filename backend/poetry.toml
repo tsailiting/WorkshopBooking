@@ -1,3 +1,6 @@
 [virtualenvs]
-create = false
+create = true
 in-project = true
+
+[installer]
+no-binary = "psycopg2-binary"
