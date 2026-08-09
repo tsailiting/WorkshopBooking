@@ -9,7 +9,7 @@
 			"version": "latest",
 			"moby": true
 		},
-		"ghcr.io/devcontainers/features/node:1": {
+		"ghcr.io/devcontainers/features/node:2": {
 			"version": "24"
 		},
 		"ghcr.io/devcontainers-contrib/features/poetry:2": {}
