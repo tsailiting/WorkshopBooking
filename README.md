@@ -17,7 +17,7 @@
 
 ## 啟動方式
 
-### 1. 啟動 PostgreSQL
+### 1. docker compose 啟動
 ```bash
 docker compose up -d --build
 ```
@@ -27,19 +27,55 @@ docker compose up -d --build
 - 後端: http://localhost:5000
 - PostgreSQL: localhost:5432
 
-### 2. 使用 Poetry 安裝 Python 依賴
+#### 1. 啟用postgreSQL
+
+資料表 schema 如下：
+
+```mermaid
+erDiagram
+	WORKSHOP_SESSIONS {
+		int id PK
+		string title
+		datetime start_time
+		int duration_minutes
+		int capacity
+		decimal price
+		string created_by
+		datetime created_at
+		datetime updated_at
+	}
+
+	RESERVATIONS {
+		int id PK
+		int session_id FK
+		string student_name
+		string user_id
+		string status
+		datetime created_at
+		datetime cancelled_at
+	}
+
+	WORKSHOP_SESSIONS ||--o{ RESERVATIONS : has
+```
+
+欄位與約束重點：
+- `reservations.session_id` 對應 `workshop_sessions.id`。
+- `reservations` 上有 `user_id + session_id` 的唯一約束，同一個使用者不能重複預約同一堂課。
+- `reservations.status` 目前使用 `confirmed`、`waitlist`、`cancelled` 三種狀態。
+
+#### 2. 使用 Poetry 安裝 Python 依賴
 ```bash
 cd backend
 poetry install
 ```
 
-### 3. 啟動 Flask API
+#### 3. 啟動 Flask API
 ```bash
 export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/workshop
 poetry run python app.py
 ```
 
-### 4. 啟動 Vue 前端
+#### 4. 啟動 Vue 前端
 ```bash
 cd frontend
 npm install
@@ -83,9 +119,3 @@ npm run test
 5. 對一筆已確認的預約，在課程開始前超過 24 小時時執行取消，確認按鈕會顯示且取消後狀態更新。
 6. 取消一筆已確認的預約後，確認候補名單中的第一位會自動遞補成已確認。
 7. 開啟瀏覽器後檢查所有時間顯示都符合瀏覽器本地時區，而不是固定 UTC。
-
-### Poetry 虛擬環境（可選）
-```bash
-cd backend
-poetry shell
-```
