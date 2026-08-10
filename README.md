@@ -119,3 +119,7 @@ npm run test
 5. 對一筆已確認的預約，在課程開始前超過 24 小時時執行取消，確認按鈕會顯示且取消後狀態更新。
 6. 取消一筆已確認的預約後，確認候補名單中的第一位會自動遞補成已確認。
 7. 開啟瀏覽器後檢查所有時間顯示都符合瀏覽器本地時區，而不是固定 UTC。
+
+![Admin View](docs/image.png)
+![User View](docs/image-1.png)
+![User Detail](docs/image-2.png)
